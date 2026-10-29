@@ -16,7 +16,6 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
-  <!-- Header Medis -->
   <header class="bg-teal-700 text-white shadow-md">
     <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
       <div class="flex items-center space-x-3">
@@ -36,10 +35,8 @@
     </div>
   </header>
 
-  <!-- Kontainer Utama -->
   <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full space-y-6">
 
-    <!-- Tab Pilihan Mode Upload -->
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
       <div class="flex border-b border-slate-200 mb-5">
         <button id="tabBtnMulti" onclick="switchMode('multi')" class="px-4 py-2 text-sm font-semibold border-b-2 border-teal-600 text-teal-700 flex items-center gap-2">
@@ -50,7 +47,6 @@
         </button>
       </div>
 
-      <!-- PANEL UPLOAD BERKAS TERPISAH -->
       <div id="panelMulti" class="space-y-4">
         <p class="text-xs text-slate-500 mb-3">
           <i class="fa-solid fa-circle-info text-teal-600 mr-1"></i> Unggah berkas Excel/CSV secara terpisah dari sistem RS/SIMRS Medify. Pada sheet Retur/Hibah, aplikasi membaca otomatis kolom <b>"Jumlah Retur"</b>.
@@ -58,7 +54,6 @@
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5">
           
-          <!-- 1. STOK AWAL -->
           <div class="p-3.5 rounded-lg border-2 border-dashed border-slate-200 hover:border-teal-500 bg-slate-50/50 transition">
             <div class="flex items-center justify-between mb-2">
               <span class="text-xs font-bold text-slate-700"><i class="fa-solid fa-cubes text-teal-600 mr-1"></i> 1. Stok Awal (SO Lalu)</span>
@@ -71,7 +66,6 @@
             <p id="label-master" class="text-[11px] text-slate-400 mt-1.5 truncate">Belum ada file dipilih</p>
           </div>
 
-          <!-- 2. IN (OBAT MASUK) -->
           <div class="p-3.5 rounded-lg border-2 border-dashed border-slate-200 hover:border-teal-500 bg-slate-50/50 transition">
             <div class="flex items-center justify-between mb-2">
               <span class="text-xs font-bold text-slate-700"><i class="fa-solid fa-circle-down text-emerald-600 mr-1"></i> 2. Masuk (IN)</span>
@@ -84,7 +78,6 @@
             <p id="label-in" class="text-[11px] text-slate-400 mt-1.5 truncate">Belum ada file dipilih</p>
           </div>
 
-          <!-- 3. OUT (OBAT KELUAR) -->
           <div class="p-3.5 rounded-lg border-2 border-dashed border-slate-200 hover:border-teal-500 bg-slate-50/50 transition">
             <div class="flex items-center justify-between mb-2">
               <span class="text-xs font-bold text-slate-700"><i class="fa-solid fa-circle-up text-amber-600 mr-1"></i> 3. Keluar (OUT)</span>
@@ -97,7 +90,6 @@
             <p id="label-out" class="text-[11px] text-slate-400 mt-1.5 truncate">Belum ada file dipilih</p>
           </div>
 
-          <!-- 4. RETUR RESEP -->
           <div class="p-3.5 rounded-lg border-2 border-dashed border-slate-200 hover:border-teal-500 bg-slate-50/50 transition">
             <div class="flex items-center justify-between mb-2">
               <span class="text-xs font-bold text-slate-700"><i class="fa-solid fa-rotate-left text-blue-600 mr-1"></i> 4. Retur Resep</span>
@@ -110,7 +102,6 @@
             <p id="label-ret" class="text-[11px] text-slate-400 mt-1.5 truncate">Belum ada file dipilih</p>
           </div>
 
-          <!-- 5. HIBAH -->
           <div class="p-3.5 rounded-lg border-2 border-dashed border-slate-200 hover:border-teal-500 bg-slate-50/50 transition">
             <div class="flex items-center justify-between mb-2">
               <span class="text-xs font-bold text-slate-700"><i class="fa-solid fa-hand-holding-medical text-purple-600 mr-1"></i> 5. Obat Hibah</span>
@@ -123,7 +114,6 @@
             <p id="label-h" class="text-[11px] text-slate-400 mt-1.5 truncate">Belum ada file dipilih</p>
           </div>
 
-          <!-- 6. SALE (PENJUALAN) -->
           <div class="p-3.5 rounded-lg border-2 border-dashed border-slate-200 hover:border-teal-500 bg-slate-50/50 transition">
             <div class="flex items-center justify-between mb-2">
               <span class="text-xs font-bold text-slate-700"><i class="fa-solid fa-cart-shopping text-rose-600 mr-1"></i> 6. Penjualan (SALE)</span>
@@ -136,7 +126,6 @@
             <p id="label-sale" class="text-[11px] text-slate-400 mt-1.5 truncate">Belum ada file dipilih</p>
           </div>
 
-          <!-- 7. WORKSHEET FISIK -->
           <div class="p-3.5 rounded-lg border-2 border-dashed border-slate-200 hover:border-teal-500 bg-slate-50/50 transition">
             <div class="flex items-center justify-between mb-2">
               <span class="text-xs font-bold text-slate-700"><i class="fa-solid fa-clipboard-check text-teal-600 mr-1"></i> 7. Worksheet Fisik</span>
@@ -149,7 +138,6 @@
             <p id="label-ws" class="text-[11px] text-slate-400 mt-1.5 truncate">Belum ada file dipilih</p>
           </div>
 
-          <!-- TOMBOL PROSES -->
           <div class="p-3.5 rounded-lg bg-teal-50/50 border border-teal-200 flex flex-col justify-center items-center">
             <button onclick="executeMultiProcess()" class="w-full py-3 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-semibold text-xs transition duration-150 shadow-sm flex items-center justify-center gap-2">
               <i class="fa-solid fa-calculator"></i> Hitung LPLPO & Rekonsiliasi
@@ -160,7 +148,6 @@
         </div>
       </div>
 
-      <!-- PANEL UPLOAD 1 FILE ALL-IN-ONE -->
       <div id="panelSingle" class="hidden">
         <div id="dropZone" class="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center bg-slate-50 hover:bg-teal-50/40 hover:border-teal-400 transition cursor-pointer">
           <input type="file" id="singleFileInput" accept=".xlsx, .xls" class="hidden" onchange="handleSingleFilePackage(event)">
@@ -177,7 +164,6 @@
 
     </div>
 
-    <!-- Ringkasan Statistik -->
     <div id="statsSection" class="hidden grid grid-cols-2 md:grid-cols-4 gap-4">
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
         <p class="text-xs font-medium text-slate-500">Total Macam Item Obat</p>
@@ -197,7 +183,6 @@
       </div>
     </div>
 
-    <!-- Tabel Hasil Rekonsiliasi & Aksi Ekspor -->
     <div id="resultSection" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       <div class="p-4 border-b border-slate-200 flex flex-col md:flex-row justify-between items-center gap-3 bg-slate-50/50">
         <div class="flex items-center gap-3 w-full md:w-auto">
@@ -217,7 +202,6 @@
         </button>
       </div>
 
-      <!-- Area Tabel -->
       <div class="overflow-x-auto max-h-[560px] custom-scrollbar">
         <table class="w-full text-left border-collapse text-xs">
           <thead class="bg-slate-100 text-slate-700 sticky top-0 z-10 shadow-sm border-b border-slate-200">
@@ -236,7 +220,6 @@
             </tr>
           </thead>
           <tbody id="tableBody" class="divide-y divide-slate-100 text-slate-700">
-            <!-- Isi baris tabel digenerate lewat JS -->
           </tbody>
         </table>
       </div>
@@ -248,15 +231,13 @@
     Aplikasi Otomatisasi Formulir LPLPO Farmasi Rumah Sakit &copy; 2026
   </footer>
 
-  <!-- LOGIKA JAVASCRIPT & GENERATOR FORMULA EXCEL -->
   <script>
-    // State Penyimpanan Berkas & Data
     const rawFiles = {
       master: null, in: null, out: null, ret: null, h: null, sale: null, ws: null
     };
 
     const parsedData = {
-      masterList: [], // {kode, nama, stokAwal}
+      masterList: [],
       inMap: {},
       outMap: {},
       retMap: {},
@@ -267,7 +248,6 @@
 
     let calculatedLPLPO = [];
 
-    // Ganti Mode Upload
     function switchMode(mode) {
       if(mode === 'multi') {
         document.getElementById('panelMulti').classList.remove('hidden');
@@ -282,13 +262,11 @@
       }
     }
 
-    // Normalisasi String Nama Obat
     function cleanName(str) {
       if (!str) return "";
       return String(str).trim().toUpperCase().replace(/\s+/g, ' ');
     }
 
-    // Handle Input File Terpisah
     function handleSingleFileInput(event, type) {
       const file = event.target.files[0];
       if (!file) return;
@@ -299,7 +277,6 @@
         const workbook = XLSX.read(data, { type: 'array' });
         rawFiles[type] = workbook;
 
-        // Ubah badge status
         const badge = document.getElementById(`badge-${type}`);
         badge.className = "text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-medium";
         badge.innerHTML = '<i class="fa-solid fa-check"></i> Siap';
@@ -311,14 +288,12 @@
       reader.readAsArrayBuffer(file);
     }
 
-    // Eksekusi Pemrosesan File Terpisah
     function executeMultiProcess() {
       if (!rawFiles.master && !rawFiles.ws) {
         alert("Mohon unggah setidaknya File Stok Awal (Master) dan File Worksheet Fisik!");
         return;
       }
 
-      // Reset Maps
       parsedData.masterList = [];
       parsedData.inMap = {};
       parsedData.outMap = {};
@@ -327,11 +302,9 @@
       parsedData.saleMap = {};
       parsedData.wsMap = {};
 
-      // 1. STOK AWAL
       if (rawFiles.master) {
         const ws = rawFiles.master.Sheets[rawFiles.master.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
-        // Cari baris header
         let hIdx = 0;
         for (let i = 0; i < Math.min(rows.length, 10); i++) {
           const r = rows[i] || [];
@@ -352,69 +325,64 @@
         }
       }
 
-      // 2. IN (Obat Masuk)
       if (rawFiles.in) {
         accumulateQuantity(rawFiles.in, parsedData.inMap, ['nama barang', 'nama obat', 'nama produk'], ['jumlah', 'qty']);
       }
 
-      // 3. OUT (Obat Keluar)
       if (rawFiles.out) {
         accumulateQuantity(rawFiles.out, parsedData.outMap, ['nama barang', 'nama obat', 'nama produk'], ['jumlah', 'qty']);
       }
 
-      // 4. RETUR (KOLOM "Jumlah Retur")
       if (rawFiles.ret) {
-        accumulateQuantity(rawFiles.ret, parsedData.retMap, ['nama obat', 'nama barang'], ['jumlah retur', 'retur']);
+        accumulateQuantity(rawFiles.ret, parsedData.retMap, ['nama obat', 'nama barang'], ['jumlah retur']);
       }
 
-      // 5. HIBAH (KOLOM "Jumlah Retur" / Hibah)
       if (rawFiles.h) {
-        accumulateQuantity(rawFiles.h, parsedData.hMap, ['nama obat', 'nama barang'], ['jumlah retur', 'retur', 'jumlah']);
+        accumulateQuantity(rawFiles.h, parsedData.hMap, ['nama obat', 'nama barang'], ['jumlah retur', 'jumlah']);
       }
 
-      // 6. SALE (Penjualan Resep / Farmasi)
       if (rawFiles.sale) {
         accumulateQuantity(rawFiles.sale, parsedData.saleMap, ['nama produk', 'nama obat', 'nama barang'], ['qty', 'jumlah']);
       }
 
-      // 7. WORKSHEET FISIK
       if (rawFiles.ws) {
         accumulateWorksheet(rawFiles.ws, parsedData.wsMap);
       }
 
-      // Gabungkan hasil ke tabel perhitungan
       generateCalculations();
     }
 
-    // Fungsi membaca kolom dan akumulasi kuantitas
+    // FUNGSI AKUMULASI YANG SUDAH DIPERBAIKI (TIDAK LAGI SALAH MENGAMBIL NO URUT)
     function accumulateQuantity(wb, targetMap, nameKeys, qtyKeys) {
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
       
       let nameCol = -1;
       let qtyCol = -1;
+      let startRow = 0;
 
       for (let i = 0; i < Math.min(rows.length, 10); i++) {
         const row = rows[i] || [];
         for (let j = 0; j < row.length; j++) {
           const val = String(row[j] || '').trim().toLowerCase();
-          if (nameCol === -1 && nameKeys.some(k => val === k || val.includes(k))) {
+          
+          if (nameCol === -1 && (val === 'nama obat' || val === 'nama barang' || val === 'nama produk' || val.includes('nama obat') || val.includes('nama barang') || val.includes('nama produk'))) {
             nameCol = j;
+            startRow = i + 1;
           }
-          if (qtyCol === -1 && qtyKeys.some(k => val === k || val.includes(k))) {
+          
+          if (qtyCol === -1 && (val === 'jumlah retur' || val === 'jumlah' || val === 'qty' || val === 'sum of jumlah')) {
             qtyCol = j;
+            startRow = i + 1;
           }
         }
         if (nameCol !== -1 && qtyCol !== -1) break;
       }
 
-      if (nameCol === -1 || qtyCol === -1) {
-        // Fallback default jika header tidak terdeteksi
-        nameCol = (nameCol === -1) ? 1 : nameCol;
-        qtyCol = (qtyCol === -1) ? 4 : qtyCol;
-      }
+      if (nameCol === -1) nameCol = 1;
+      if (qtyCol === -1) qtyCol = 4;
 
-      for (let i = 0; i < rows.length; i++) {
+      for (let i = startRow; i < rows.length; i++) {
         const row = rows[i];
         if (!row) continue;
         const n = cleanName(row[nameCol]);
@@ -425,13 +393,12 @@
       }
     }
 
-    // Membaca Sheet Worksheet (Fisik)
     function accumulateWorksheet(wb, targetMap) {
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
       
-      let nameCol = 3;  // Kolom D (NAMA BARANG)
-      let akhirCol = 8; // Kolom I (AKHIR / FISIK)
+      let nameCol = 3;
+      let akhirCol = 8;
 
       for (let i = 0; i < Math.min(rows.length, 10); i++) {
         const r = rows[i] || [];
@@ -453,7 +420,6 @@
       }
     }
 
-    // Handler 1 File All-in-One
     function handleSingleFilePackage(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -463,7 +429,6 @@
         const data = new Uint8Array(e.target.result);
         const wb = XLSX.read(data, { type: 'array' });
         
-        // Simpan setiap sheet sebagai virtual workbook
         wb.SheetNames.forEach(sheetName => {
           const sUpper = sheetName.toUpperCase();
           const singleSheetWb = { SheetNames: [sheetName], Sheets: { [sheetName]: wb.Sheets[sheetName] } };
@@ -482,7 +447,6 @@
       reader.readAsArrayBuffer(file);
     }
 
-    // Perhitungan Final Rekonsiliasi
     function generateCalculations() {
       calculatedLPLPO = [];
 
@@ -500,9 +464,7 @@
         const sale = parsedData.saleMap[key] || 0;
         const worksheet = parsedData.wsMap[key] || 0;
 
-        // Rumus: Sisa = Awal + Retur + Hibah + In - Out - Sale
         const sisa = awal + ret + h + masuk - out - sale;
-        // Rumus: Selisih = Sisa - Fisik
         const selisih = sisa - worksheet;
 
         if (selisih === 0) totalCocok++;
@@ -524,7 +486,6 @@
         });
       });
 
-      // Update Tampilan Statistik
       document.getElementById('statTotalItems').innerText = calculatedLPLPO.length;
       document.getElementById('statMatch').innerText = totalCocok;
       document.getElementById('statMinus').innerText = totalMinus;
@@ -536,7 +497,6 @@
       renderTable(calculatedLPLPO);
     }
 
-    // Render Tabel Antarmuka
     function renderTable(data) {
       const tbody = document.getElementById('tableBody');
       tbody.innerHTML = '';
@@ -566,7 +526,6 @@
       });
     }
 
-    // Filter Pencarian & Status
     function filterTable() {
       const query = document.getElementById('searchInput').value.toLowerCase();
       const status = document.getElementById('statusFilter').value;
@@ -582,9 +541,6 @@
       renderTable(filtered);
     }
 
-    // =========================================================================
-    // FITUR UTAMA: EKSPOR EXCEL SAMA PERSIS DENGAN FILE ASLI + RUMUS EXCEL DINAMIS
-    // =========================================================================
     function exportToIdenticalExcel() {
       if (calculatedLPLPO.length === 0) {
         alert("Tidak ada data untuk diekspor!");
@@ -593,29 +549,24 @@
 
       const outWb = XLSX.utils.book_new();
 
-      // 1. GENERATE SHEET 'LPLPO RI' DENGAN FORMULA ASLI
       const lplpoHeaders = ['Kode', 'Nama Barang', 'Depo RI (stok awal)', 'RETUR', 'HIBAH', 'IN', 'OUT', 'SALE', 'SISA', 'WORKSHEET', 'SELISIH'];
       const lplpoRows = [lplpoHeaders];
 
       for (let i = 0; i < calculatedLPLPO.length; i++) {
         const item = calculatedLPLPO[i];
-        const r = i + 2; // Baris Excel (dimulai dari baris 2 setelah header)
+        const r = i + 2;
 
         lplpoRows.push([
           item.kode,
           item.nama,
           item.awal,
-          // Rumus SUMIF ke sheet masing-masing membaca nama obat dan kolom kuantitas
           { t: 'n', f: `IFERROR(SUMIF(RET!$F:$F, B${r}, RET!$H:$H), 0)`, v: item.ret },
           { t: 'n', f: `IFERROR(SUMIF(H!$F:$F, B${r}, H!$H:$H), 0)`, v: item.h },
           { t: 'n', f: `IFERROR(SUMIF(IN!$B:$B, B${r}, IN!$E:$E), 0)`, v: item.in },
           { t: 'n', f: `IFERROR(SUMIF(O!$B:$B, B${r}, O!$E:$E), 0)`, v: item.out },
           { t: 'n', f: `IFERROR(SUMIF(SALE!$B:$B, B${r}, SALE!$D:$D), 0)`, v: item.sale },
-          // Rumus Sisa: Stok Awal + Retur + Hibah + In - Out - Sale
           { t: 'n', f: `C${r}+D${r}+E${r}+F${r}-G${r}-H${r}`, v: item.sisa },
-          // Rumus Worksheet: SUMIF dari sheet Worksheet
           { t: 'n', f: `SUMIF(Worksheet!$D:$D, 'LPLPO RI'!B${r}, Worksheet!$I:$I)`, v: item.worksheet },
-          // Rumus Selisih: Sisa - Worksheet
           { t: 'n', f: `I${r}-J${r}`, v: item.selisih }
         ]);
       }
@@ -623,7 +574,6 @@
       const wsLPLPO = XLSX.utils.aoa_to_sheet(lplpoRows);
       XLSX.utils.book_append_sheet(outWb, wsLPLPO, 'LPLPO RI');
 
-      // 2. SERTAKAN SHEET-SHEET SUMBER ASLI DENGAN FORMAT PERSIS
       appendSheetOrEmpty(outWb, rawFiles.ws, 'Worksheet');
       appendSheetOrEmpty(outWb, rawFiles.master, 'SO JULI');
       appendSheetOrEmpty(outWb, rawFiles.in, 'IN');
@@ -632,11 +582,9 @@
       appendSheetOrEmpty(outWb, rawFiles.out, 'O');
       appendSheetOrEmpty(outWb, rawFiles.sale, 'SALE');
 
-      // Unduh File
       XLSX.writeFile(outWb, "LPLPO_RI_REKONSILIASI_REAL.xlsx");
     }
 
-    // Helper untuk menyematkan sheet asli ke file unduhan
     function appendSheetOrEmpty(targetWb, sourceWb, sheetTitle) {
       if (sourceWb && sourceWb.SheetNames.length > 0) {
         const sName = sourceWb.SheetNames[0];
@@ -648,7 +596,6 @@
       }
     }
 
-    // Reset Semua
     function resetAllData() {
       location.reload();
     }
