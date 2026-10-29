@@ -49,7 +49,7 @@
 
       <div id="panelMulti" class="space-y-4">
         <p class="text-xs text-slate-500 mb-3">
-          <i class="fa-solid fa-circle-info text-teal-600 mr-1"></i> Unggah berkas Excel/CSV secara terpisah dari sistem RS/SIMRS Medify. Pada sheet Retur/Hibah, aplikasi membaca otomatis kolom <b>"Jumlah Retur"</b>.
+          <i class="fa-solid fa-circle-info text-teal-600 mr-1"></i> Unggah berkas Excel/CSV secara terpisah dari sistem RS/SIMRS Medify. Pada sheet Retur/Hibah, aplikasi membaca kolom <b>"Jumlah Retur"</b>, dan pada Worksheet membaca kolom <b>"AKHIR"</b>.
         </p>
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5">
@@ -128,7 +128,7 @@
 
           <div class="p-3.5 rounded-lg border-2 border-dashed border-slate-200 hover:border-teal-500 bg-slate-50/50 transition">
             <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-bold text-slate-700"><i class="fa-solid fa-clipboard-check text-teal-600 mr-1"></i> 7. Worksheet Fisik</span>
+              <span class="text-xs font-bold text-slate-700"><i class="fa-solid fa-clipboard-check text-teal-600 mr-1"></i> 7. Worksheet (Kolom AKHIR)</span>
               <span id="badge-ws" class="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded font-medium">Kosong</span>
             </div>
             <input type="file" id="file-ws" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleSingleFileInput(event, 'ws')">
@@ -215,7 +215,7 @@
               <th class="py-2.5 px-3 font-semibold text-right">Out</th>
               <th class="py-2.5 px-3 font-semibold text-right">Sale</th>
               <th class="py-2.5 px-3 font-semibold text-right bg-teal-50 text-teal-800">Sisa (Sistem)</th>
-              <th class="py-2.5 px-3 font-semibold text-right bg-slate-200/70">Worksheet (Fisik)</th>
+              <th class="py-2.5 px-3 font-semibold text-right bg-slate-200/70">Worksheet (AKHIR)</th>
               <th class="py-2.5 px-3 font-semibold text-right">Selisih</th>
             </tr>
           </thead>
@@ -352,7 +352,6 @@
       generateCalculations();
     }
 
-    // FUNGSI AKUMULASI YANG SUDAH DIPERBAIKI (TIDAK LAGI SALAH MENGAMBIL NO URUT)
     function accumulateQuantity(wb, targetMap, nameKeys, qtyKeys) {
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
@@ -393,28 +392,41 @@
       }
     }
 
+    // FUNGSI MEMBACA WORKSHEET: HANYA MENGUNCI KOLOM "AKHIR"
     function accumulateWorksheet(wb, targetMap) {
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
       
-      let nameCol = 3;
-      let akhirCol = 8;
+      let nameCol = -1;
+      let akhirCol = -1;
+      let startRow = 0;
 
       for (let i = 0; i < Math.min(rows.length, 10); i++) {
         const r = rows[i] || [];
         for (let j = 0; j < r.length; j++) {
-          const v = String(r[j] || '').toLowerCase();
-          if (v.includes('nama barang')) nameCol = j;
-          if (v === 'akhir' || v === 'fisik') akhirCol = j;
+          const v = String(r[j] || '').trim().toLowerCase();
+          if (nameCol === -1 && (v === 'nama barang' || v === 'nama obat' || v.includes('nama barang'))) {
+            nameCol = j;
+            startRow = i + 1;
+          }
+          // HANYA membaca kolom "AKHIR" secara spesifik (tidak membaca kolom fisik)
+          if (akhirCol === -1 && (v === 'akhir' || v.includes('akhir'))) {
+            akhirCol = j;
+            startRow = i + 1;
+          }
         }
+        if (nameCol !== -1 && akhirCol !== -1) break;
       }
 
-      for (let i = 0; i < rows.length; i++) {
+      if (nameCol === -1) nameCol = 3;  // Kolom D (NAMA BARANG)
+      if (akhirCol === -1) akhirCol = 8; // Kolom I (AKHIR)
+
+      for (let i = startRow; i < rows.length; i++) {
         const row = rows[i];
         if (!row) continue;
         const n = cleanName(row[nameCol]);
-        const q = parseFloat(row[akhirCol]) || 0;
-        if (n) {
+        const q = parseFloat(row[akhirCol]);
+        if (n && !isNaN(q)) {
           targetMap[n] = (targetMap[n] || 0) + q;
         }
       }
@@ -566,6 +578,7 @@
           { t: 'n', f: `IFERROR(SUMIF(O!$B:$B, B${r}, O!$E:$E), 0)`, v: item.out },
           { t: 'n', f: `IFERROR(SUMIF(SALE!$B:$B, B${r}, SALE!$D:$D), 0)`, v: item.sale },
           { t: 'n', f: `C${r}+D${r}+E${r}+F${r}-G${r}-H${r}`, v: item.sisa },
+          // Rumus Worksheet di Excel mengacu ke kolom I (kolom AKHIR di sheet Worksheet)
           { t: 'n', f: `SUMIF(Worksheet!$D:$D, 'LPLPO RI'!B${r}, Worksheet!$I:$I)`, v: item.worksheet },
           { t: 'n', f: `I${r}-J${r}`, v: item.selisih }
         ]);
