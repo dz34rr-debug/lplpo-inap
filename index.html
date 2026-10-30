@@ -49,7 +49,7 @@
 
       <div id="panelMulti" class="space-y-4">
         <p class="text-xs text-slate-500 mb-3">
-          <i class="fa-solid fa-circle-info text-teal-600 mr-1"></i> Unggah berkas Excel/CSV secara terpisah dari sistem RS/SIMRS Medify. Pada sheet Retur/Hibah, aplikasi membaca otomatis kolom <b>"Jumlah Retur"</b>.
+          <i class="fa-solid fa-circle-info text-teal-600 mr-1"></i> Unggah berkas Excel/CSV secara terpisah dari SIMRS. Pada sheet Retur/Hibah membaca kolom <b>"Jumlah Retur"</b>, dan pada Worksheet membaca kolom <b>"FISIK"</b> serta kolom <b>"REAL"</b>.
         </p>
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5">
@@ -128,7 +128,7 @@
 
           <div class="p-3.5 rounded-lg border-2 border-dashed border-slate-200 hover:border-teal-500 bg-slate-50/50 transition">
             <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-bold text-slate-700"><i class="fa-solid fa-clipboard-check text-teal-600 mr-1"></i> 7. Worksheet Fisik</span>
+              <span class="text-xs font-bold text-slate-700"><i class="fa-solid fa-clipboard-check text-teal-600 mr-1"></i> 7. Worksheet (Fisik & Real)</span>
               <span id="badge-ws" class="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded font-medium">Kosong</span>
             </div>
             <input type="file" id="file-ws" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleSingleFileInput(event, 'ws')">
@@ -142,7 +142,7 @@
             <button onclick="executeMultiProcess()" class="w-full py-3 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-semibold text-xs transition duration-150 shadow-sm flex items-center justify-center gap-2">
               <i class="fa-solid fa-calculator"></i> Hitung LPLPO & Rekonsiliasi
             </button>
-            <span class="text-[10px] text-teal-700 mt-2 text-center">Pastikan minimal file Stok Awal & Worksheet terisi</span>
+            <span class="text-[10px] text-teal-700 mt-2 text-center">Pastikan file Stok Awal & Worksheet terisi</span>
           </div>
 
         </div>
@@ -154,7 +154,7 @@
           <div class="space-y-2">
             <i class="fa-solid fa-file-excel text-4xl text-teal-600 mb-2"></i>
             <h3 class="text-sm font-semibold text-slate-700">Tarik & Lepas File Excel SO Gabungan di Sini</h3>
-            <p class="text-xs text-slate-400">File berisi sheet: SO JULI, IN, O, RET, H, SALE, Worksheet</p>
+            <p class="text-xs text-slate-400">File berisi sheet: SO, IN, O, RET, H, SALE, Worksheet</p>
             <button type="button" onclick="document.getElementById('singleFileInput').click()" class="mt-3 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-lg shadow-sm">
               Pilih File Excel
             </button>
@@ -170,16 +170,16 @@
         <p id="statTotalItems" class="text-2xl font-bold text-slate-800 mt-1">0</p>
       </div>
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-        <p class="text-xs font-medium text-slate-500">Stok Cocok (Selisih = 0)</p>
+        <p class="text-xs font-medium text-slate-500">Stok Cocok (Sisa = Fisik)</p>
         <p id="statMatch" class="text-2xl font-bold text-emerald-600 mt-1">0</p>
       </div>
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-        <p class="text-xs font-medium text-slate-500">Selisih Kurang (Sistem > Fisik)</p>
-        <p id="statMinus" class="text-2xl font-bold text-rose-600 mt-1">0</p>
+        <p class="text-xs font-medium text-slate-500">Selisih Fisik (Sisa - Fisik ≠ 0)</p>
+        <p id="statDiffFisik" class="text-2xl font-bold text-amber-600 mt-1">0</p>
       </div>
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-        <p class="text-xs font-medium text-slate-500">Selisih Lebih (Sistem < Fisik)</p>
-        <p id="statPlus" class="text-2xl font-bold text-blue-600 mt-1">0</p>
+        <p class="text-xs font-medium text-slate-500">Selisih Real (Real - Sisa ≠ 0)</p>
+        <p id="statDiffReal" class="text-2xl font-bold text-rose-600 mt-1">0</p>
       </div>
     </div>
 
@@ -192,8 +192,9 @@
           </div>
           <select id="statusFilter" onchange="filterTable()" class="text-xs py-1.5 px-3 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
             <option value="all">Semua Status</option>
-            <option value="selisih">Hanya Yang Selisih (≠ 0)</option>
-            <option value="cocok">Hanya Sesuai (= 0)</option>
+            <option value="selisih_fisik">Selisih Fisik (Sisa ≠ Fisik)</option>
+            <option value="selisih_real">Selisih Real (Real ≠ Sisa)</option>
+            <option value="cocok">Semua Cocok (= 0)</option>
           </select>
         </div>
 
@@ -215,8 +216,10 @@
               <th class="py-2.5 px-3 font-semibold text-right">Out</th>
               <th class="py-2.5 px-3 font-semibold text-right">Sale</th>
               <th class="py-2.5 px-3 font-semibold text-right bg-teal-50 text-teal-800">Sisa (Sistem)</th>
-              <th class="py-2.5 px-3 font-semibold text-right bg-slate-200/70">Worksheet (Fisik)</th>
-              <th class="py-2.5 px-3 font-semibold text-right">Selisih</th>
+              <th class="py-2.5 px-3 font-semibold text-right bg-slate-200/70">Fisik (Worksheet)</th>
+              <th class="py-2.5 px-3 font-semibold text-right">Selisih Fisik</th>
+              <th class="py-2.5 px-3 font-semibold text-right bg-purple-50 text-purple-900 font-bold">Real</th>
+              <th class="py-2.5 px-3 font-semibold text-right bg-purple-100 text-purple-900 font-bold">Selisih Real (Real - Sisa)</th>
             </tr>
           </thead>
           <tbody id="tableBody" class="divide-y divide-slate-100 text-slate-700">
@@ -243,7 +246,8 @@
       retMap: {},
       hMap: {},
       saleMap: {},
-      wsMap: {}
+      wsFisikMap: {},
+      wsRealMap: {}
     };
 
     let calculatedLPLPO = [];
@@ -300,7 +304,8 @@
       parsedData.retMap = {};
       parsedData.hMap = {};
       parsedData.saleMap = {};
-      parsedData.wsMap = {};
+      parsedData.wsFisikMap = {};
+      parsedData.wsRealMap = {};
 
       if (rawFiles.master) {
         const ws = rawFiles.master.Sheets[rawFiles.master.SheetNames[0]];
@@ -346,13 +351,12 @@
       }
 
       if (rawFiles.ws) {
-        accumulateWorksheet(rawFiles.ws, parsedData.wsMap);
+        accumulateWorksheet(rawFiles.ws, parsedData.wsFisikMap, parsedData.wsRealMap);
       }
 
       generateCalculations();
     }
 
-    // FUNGSI AKUMULASI YANG SUDAH DIPERBAIKI (TIDAK LAGI SALAH MENGAMBIL NO URUT)
     function accumulateQuantity(wb, targetMap, nameKeys, qtyKeys) {
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
@@ -393,29 +397,59 @@
       }
     }
 
-    function accumulateWorksheet(wb, targetMap) {
+    // MEMBACA WORKSHEET: MEMBACA KOLOM "FISIK" DAN KOLOM "REAL"
+    function accumulateWorksheet(wb, fisikMap, realMap) {
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
       
-      let nameCol = 3;
-      let akhirCol = 8;
+      let nameCol = -1;
+      let fisikCol = -1;
+      let realCol = -1;
+      let startRow = 0;
 
       for (let i = 0; i < Math.min(rows.length, 10); i++) {
         const r = rows[i] || [];
         for (let j = 0; j < r.length; j++) {
-          const v = String(r[j] || '').toLowerCase();
-          if (v.includes('nama barang')) nameCol = j;
-          if (v === 'akhir' || v === 'fisik') akhirCol = j;
+          const v = String(r[j] || '').trim().toLowerCase();
+          if (nameCol === -1 && (v === 'nama barang' || v === 'nama obat' || v.includes('nama barang'))) {
+            nameCol = j;
+            startRow = i + 1;
+          }
+          // Kolom FISIK (bukan selisih)
+          if (fisikCol === -1 && (v === 'fisik' || v.includes('fisik')) && !v.includes('selisih')) {
+            fisikCol = j;
+            startRow = i + 1;
+          }
+          // Kolom REAL
+          if (realCol === -1 && (v === 'real' || v.includes('real')) && !v.includes('selisih')) {
+            realCol = j;
+            startRow = i + 1;
+          }
         }
+        if (nameCol !== -1 && fisikCol !== -1 && realCol !== -1) break;
       }
 
-      for (let i = 0; i < rows.length; i++) {
+      // Default fallback jika tidak ditemukan di header
+      if (nameCol === -1) nameCol = 3;   // Kolom D
+      if (fisikCol === -1) fisikCol = 9;  // Kolom J (FISIK)
+      if (realCol === -1) realCol = 12;   // Kolom M (REAL)
+
+      for (let i = startRow; i < rows.length; i++) {
         const row = rows[i];
         if (!row) continue;
         const n = cleanName(row[nameCol]);
-        const q = parseFloat(row[akhirCol]) || 0;
-        if (n) {
-          targetMap[n] = (targetMap[n] || 0) + q;
+        if (!n) continue;
+
+        // Ambil nilai FISIK
+        const qFisik = parseFloat(row[fisikCol]);
+        if (!isNaN(qFisik)) {
+          fisikMap[n] = (fisikMap[n] || 0) + qFisik;
+        }
+
+        // Ambil nilai REAL
+        const qReal = parseFloat(row[realCol]);
+        if (!isNaN(qReal)) {
+          realMap[n] = (realMap[n] || 0) + qReal;
         }
       }
     }
@@ -433,7 +467,8 @@
           const sUpper = sheetName.toUpperCase();
           const singleSheetWb = { SheetNames: [sheetName], Sheets: { [sheetName]: wb.Sheets[sheetName] } };
           
-          if (sUpper.includes('SO JULI') || sUpper.includes('MASTER') || sUpper.includes('STOK')) rawFiles.master = singleSheetWb;
+          if (sUpper.includes('SO') && !sUpper.includes('OKTOBER') && !sUpper.includes('LPLPO')) rawFiles.master = singleSheetWb;
+          else if (sUpper.includes('MASTER') || sUpper.includes('STOK')) rawFiles.master = singleSheetWb;
           else if (sUpper === 'IN') rawFiles.in = singleSheetWb;
           else if (sUpper === 'O' || sUpper === 'OUT') rawFiles.out = singleSheetWb;
           else if (sUpper === 'RET') rawFiles.ret = singleSheetWb;
@@ -441,6 +476,12 @@
           else if (sUpper === 'SALE') rawFiles.sale = singleSheetWb;
           else if (sUpper.includes('WORKSHEET')) rawFiles.ws = singleSheetWb;
         });
+
+        // Fallback untuk master jika belum terdeteksi
+        if (!rawFiles.master) {
+          const soSheet = wb.SheetNames.find(s => s.toUpperCase().includes('SO'));
+          if (soSheet) rawFiles.master = { SheetNames: [soSheet], Sheets: { [soSheet]: wb.Sheets[soSheet] } };
+        }
 
         executeMultiProcess();
       };
@@ -451,8 +492,8 @@
       calculatedLPLPO = [];
 
       let totalCocok = 0;
-      let totalMinus = 0;
-      let totalPlus = 0;
+      let totalDiffFisik = 0;
+      let totalDiffReal = 0;
 
       parsedData.masterList.forEach(item => {
         const key = item.cleanNama;
@@ -462,14 +503,21 @@
         const masuk = parsedData.inMap[key] || 0;
         const out = parsedData.outMap[key] || 0;
         const sale = parsedData.saleMap[key] || 0;
-        const worksheet = parsedData.wsMap[key] || 0;
+        
+        const worksheet = parsedData.wsFisikMap[key] || 0;
+        const real = parsedData.wsRealMap[key] !== undefined ? parsedData.wsRealMap[key] : 0;
 
+        // Rumus: Sisa = Awal + Ret + H + In - Out - Sale
         const sisa = awal + ret + h + masuk - out - sale;
-        const selisih = sisa - worksheet;
+        // Selisih Fisik = Sisa - Fisik
+        const selisihFisik = sisa - worksheet;
+        // Selisih Real = Real - Sisa
+        const selisihReal = real - sisa;
 
-        if (selisih === 0) totalCocok++;
-        else if (selisih > 0) totalMinus++;
-        else totalPlus++;
+        if (selisihFisik === 0) totalCocok++;
+        else totalDiffFisik++;
+
+        if (selisihReal !== 0) totalDiffReal++;
 
         calculatedLPLPO.push({
           kode: item.kode,
@@ -482,14 +530,16 @@
           sale: sale,
           sisa: sisa,
           worksheet: worksheet,
-          selisih: selisih
+          selisihFisik: selisihFisik,
+          real: real,
+          selisihReal: selisihReal
         });
       });
 
       document.getElementById('statTotalItems').innerText = calculatedLPLPO.length;
       document.getElementById('statMatch').innerText = totalCocok;
-      document.getElementById('statMinus').innerText = totalMinus;
-      document.getElementById('statPlus').innerText = totalPlus;
+      document.getElementById('statDiffFisik').innerText = totalDiffFisik;
+      document.getElementById('statDiffReal').innerText = totalDiffReal;
 
       document.getElementById('statsSection').classList.remove('hidden');
       document.getElementById('resultSection').classList.remove('hidden');
@@ -505,9 +555,13 @@
         const tr = document.createElement('tr');
         tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
 
-        let badgeClass = "text-emerald-700 bg-emerald-50";
-        if (item.selisih > 0) badgeClass = "text-rose-700 bg-rose-50 font-bold";
-        else if (item.selisih < 0) badgeClass = "text-blue-700 bg-blue-50 font-bold";
+        let badgeFisik = "text-emerald-700 bg-emerald-50";
+        if (item.selisihFisik > 0) badgeFisik = "text-rose-700 bg-rose-50 font-bold";
+        else if (item.selisihFisik < 0) badgeFisik = "text-blue-700 bg-blue-50 font-bold";
+
+        let badgeReal = "text-emerald-700 bg-emerald-50";
+        if (item.selisihReal > 0) badgeReal = "text-blue-700 bg-blue-50 font-bold";
+        else if (item.selisihReal < 0) badgeReal = "text-rose-700 bg-rose-50 font-bold";
 
         tr.innerHTML = `
           <td class="py-2 px-3 font-mono text-[11px] text-slate-500">${item.kode}</td>
@@ -520,7 +574,9 @@
           <td class="py-2 px-3 text-right font-mono text-rose-600">${item.sale > 0 ? item.sale : '-'}</td>
           <td class="py-2 px-3 text-right font-mono font-semibold bg-teal-50/60 text-teal-900">${item.sisa}</td>
           <td class="py-2 px-3 text-right font-mono font-semibold bg-slate-100 text-slate-900">${item.worksheet}</td>
-          <td class="py-2 px-3 text-right font-mono ${badgeClass}">${item.selisih}</td>
+          <td class="py-2 px-3 text-right font-mono ${badgeFisik}">${item.selisihFisik}</td>
+          <td class="py-2 px-3 text-right font-mono font-semibold bg-purple-50/70 text-purple-900">${item.real}</td>
+          <td class="py-2 px-3 text-right font-mono ${badgeReal}">${item.selisihReal}</td>
         `;
         tbody.appendChild(tr);
       });
@@ -533,8 +589,9 @@
       const filtered = calculatedLPLPO.filter(item => {
         const matchesQuery = item.kode.toLowerCase().includes(query) || item.nama.toLowerCase().includes(query);
         let matchesStatus = true;
-        if (status === 'selisih') matchesStatus = (item.selisih !== 0);
-        if (status === 'cocok') matchesStatus = (item.selisih === 0);
+        if (status === 'selisih_fisik') matchesStatus = (item.selisihFisik !== 0);
+        if (status === 'selisih_real') matchesStatus = (item.selisihReal !== 0);
+        if (status === 'cocok') matchesStatus = (item.selisihFisik === 0 && item.selisihReal === 0);
         return matchesQuery && matchesStatus;
       });
 
@@ -549,7 +606,8 @@
 
       const outWb = XLSX.utils.book_new();
 
-      const lplpoHeaders = ['Kode', 'Nama Barang', 'Depo RI (stok awal)', 'RETUR', 'HIBAH', 'IN', 'OUT', 'SALE', 'SISA', 'WORKSHEET', 'SELISIH'];
+      // Sheet LPLPO RI dengan penambahan kolom REAL dan SELISIH REAL
+      const lplpoHeaders = ['Kode', 'Nama Barang', 'Depo RI (stok awal)', 'RETUR', 'HIBAH', 'IN', 'OUT', 'SALE', 'SISA', 'WORKSHEET (FISIK)', 'SELISIH FISIK', 'REAL', 'SELISIH REAL (REAL - SISA)'];
       const lplpoRows = [lplpoHeaders];
 
       for (let i = 0; i < calculatedLPLPO.length; i++) {
@@ -560,29 +618,35 @@
           item.kode,
           item.nama,
           item.awal,
-          { t: 'n', f: `IFERROR(SUMIF(RET!$F:$F, B${r}, RET!$H:$H), 0)`, v: item.ret },
-          { t: 'n', f: `IFERROR(SUMIF(H!$F:$F, B${r}, H!$H:$H), 0)`, v: item.h },
-          { t: 'n', f: `IFERROR(SUMIF(IN!$B:$B, B${r}, IN!$E:$E), 0)`, v: item.in },
-          { t: 'n', f: `IFERROR(SUMIF(O!$B:$B, B${r}, O!$E:$E), 0)`, v: item.out },
-          { t: 'n', f: `IFERROR(SUMIF(SALE!$B:$B, B${r}, SALE!$D:$D), 0)`, v: item.sale },
+          { t: 'n', f: `IFERROR(SUMIF(RET!$B:$B, B${r}, RET!$C:$C), 0)`, v: item.ret },
+          { t: 'n', f: `IFERROR(SUMIF(H!$B:$B, B${r}, H!$C:$C), 0)`, v: item.h },
+          { t: 'n', f: `IFERROR(SUMIF(IN!$B:$B, B${r}, IN!$C:$C), 0)`, v: item.in },
+          { t: 'n', f: `IFERROR(SUMIF(O!$B:$B, B${r}, O!$C:$C), 0)`, v: item.out },
+          { t: 'n', f: `IFERROR(SUMIF(SALE!$B:$B, B${r}, SALE!$C:$C), 0)`, v: item.sale },
           { t: 'n', f: `C${r}+D${r}+E${r}+F${r}-G${r}-H${r}`, v: item.sisa },
-          { t: 'n', f: `SUMIF(Worksheet!$D:$D, 'LPLPO RI'!B${r}, Worksheet!$I:$I)`, v: item.worksheet },
-          { t: 'n', f: `I${r}-J${r}`, v: item.selisih }
+          // Formula Worksheet mengacu ke kolom FISIK (kolom J di worksheet)
+          { t: 'n', f: `SUMIF(worksheet!$D:$D, 'LPLPO RI'!B${r}, worksheet!$J:$J)`, v: item.worksheet },
+          // Formula Selisih Fisik: Sisa - Worksheet
+          { t: 'n', f: `I${r}-J${r}`, v: item.selisihFisik },
+          // Formula REAL mengacu ke kolom REAL (kolom M di worksheet)
+          { t: 'n', f: `SUMIF(worksheet!$D:$D, 'LPLPO RI'!B${r}, worksheet!$M:$M)`, v: item.real },
+          // Formula Selisih Real: REAL - SISA (L - I)
+          { t: 'n', f: `L${r}-I${r}`, v: item.selisihReal }
         ]);
       }
 
       const wsLPLPO = XLSX.utils.aoa_to_sheet(lplpoRows);
       XLSX.utils.book_append_sheet(outWb, wsLPLPO, 'LPLPO RI');
 
-      appendSheetOrEmpty(outWb, rawFiles.ws, 'Worksheet');
-      appendSheetOrEmpty(outWb, rawFiles.master, 'SO JULI');
+      appendSheetOrEmpty(outWb, rawFiles.ws, 'worksheet');
+      appendSheetOrEmpty(outWb, rawFiles.master, 'SO LALU');
       appendSheetOrEmpty(outWb, rawFiles.in, 'IN');
       appendSheetOrEmpty(outWb, rawFiles.h, 'H');
       appendSheetOrEmpty(outWb, rawFiles.ret, 'RET');
       appendSheetOrEmpty(outWb, rawFiles.out, 'O');
       appendSheetOrEmpty(outWb, rawFiles.sale, 'SALE');
 
-      XLSX.writeFile(outWb, "LPLPO_RI_REKONSILIASI_REAL.xlsx");
+      XLSX.writeFile(outWb, "LPLPO_RI_REKONSILIASI_OKTOBER.xlsx");
     }
 
     function appendSheetOrEmpty(targetWb, sourceWb, sheetTitle) {
