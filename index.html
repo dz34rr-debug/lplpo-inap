@@ -49,7 +49,7 @@
 
       <div id="panelMulti" class="space-y-4">
         <p class="text-xs text-slate-500 mb-3">
-          <i class="fa-solid fa-circle-info text-teal-600 mr-1"></i> Unggah berkas Excel/CSV secara terpisah dari SIMRS. Aplikasi otomatis mendeteksi kolom nama dan kuantitas, serta menyusun rumus SUMIF yang sesuai pada file unduhan.
+          <i class="fa-solid fa-circle-info text-teal-600 mr-1"></i> Unggah berkas Excel/CSV secara terpisah dari SIMRS. Aplikasi membaca kolom <b>"Jumlah Retur" (Kolom H)</b> dan mengabaikan nomor urut atau harga retur.
         </p>
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5">
@@ -367,15 +367,18 @@
 
       for (let i = 0; i < Math.min(rows.length, 10); i++) {
         const row = rows[i] || [];
+        const nonEmpty = row.filter(cell => cell !== undefined && cell !== null && String(cell).trim() !== '');
+        if (nonEmpty.length < 2) continue;
+
         for (let j = 0; j < row.length; j++) {
           const val = String(row[j] || '').trim().toLowerCase();
           
-          if (nameCol === -1 && (val === 'nama obat' || val === 'nama barang' || val === 'nama produk' || val.includes('nama obat') || val.includes('nama barang') || val.includes('nama produk'))) {
+          if (nameCol === -1 && nameKeys.some(k => val === k || (val.includes(k) && val.length < 35))) {
             nameCol = j;
             startRow = i + 1;
           }
           
-          if (qtyCol === -1 && (val === 'jumlah retur' || val === 'jumlah' || val === 'qty' || val === 'sum of jumlah')) {
+          if (qtyCol === -1 && qtyKeys.some(k => val === k)) {
             qtyCol = j;
             startRow = i + 1;
           }
@@ -595,7 +598,7 @@
       return letter;
     }
 
-    // DETEKSI HURUF KOLOM SUMBER TRANSAKSI SECARA DINAMIS
+    // DETEKSI HURUF KOLOM SUMBER TRANSAKSI SECARA DINAMIS & KETAT
     function detectSourceColLetters(wb, nameKeys, qtyKeys, defaultNameCol, defaultQtyCol) {
       if (!wb || !wb.SheetNames || wb.SheetNames.length === 0) {
         return { nameCol: colIndexToLetter(defaultNameCol), qtyCol: colIndexToLetter(defaultQtyCol) };
@@ -606,12 +609,21 @@
 
       for (let i = 0; i < Math.min(rows.length, 10); i++) {
         const row = rows[i] || [];
+        // Pastikan baris memiliki minimal 2 kolom terisi agar baris judul laporan diabaikan
+        const nonEmpty = row.filter(cell => cell !== undefined && cell !== null && String(cell).trim() !== '');
+        if (nonEmpty.length < 2) continue;
+
         for (let j = 0; j < row.length; j++) {
           const val = String(row[j] || '').trim().toLowerCase();
-          if (nIdx === -1 && nameKeys.some(k => val === k || val.includes(k))) {
+          if (!val) continue;
+
+          // Deteksi kolom nama barang/obat
+          if (nIdx === -1 && nameKeys.some(k => val === k || (val.includes(k) && val.length < 35))) {
             nIdx = j;
           }
-          if (qIdx === -1 && qtyKeys.some(k => val === k || (k.length > 3 && val.includes(k)))) {
+
+          // Deteksi kolom kuantitas secara persis (tidak mengambil No urut atau harga)
+          if (qIdx === -1 && qtyKeys.some(k => val === k)) {
             qIdx = j;
           }
         }
@@ -665,7 +677,8 @@
 
       const outWb = XLSX.utils.book_new();
 
-      const retCols = detectSourceColLetters(rawFiles.ret, ['nama obat', 'nama barang'], ['jumlah retur', 'retur'], 1, 2);
+      // Deteksi kolom presisi untuk masing-masing berkas
+      const retCols = detectSourceColLetters(rawFiles.ret, ['nama obat', 'nama barang'], ['jumlah retur', 'jumlah', 'qty'], 5, 7);
       const hCols = detectSourceColLetters(rawFiles.h, ['nama obat', 'nama barang'], ['jumlah retur', 'jumlah'], 1, 2);
       const inCols = detectSourceColLetters(rawFiles.in, ['nama barang', 'nama obat', 'nama produk'], ['jumlah', 'qty'], 1, 2);
       const outCols = detectSourceColLetters(rawFiles.out, ['nama barang', 'nama obat', 'nama produk'], ['jumlah', 'qty'], 1, 2);
@@ -687,6 +700,7 @@
           item.kode,
           item.nama,
           item.awal,
+          // Formula Retur yang tepat mengarah ke kolom Jumlah Retur (Kolom H pada file SIMRS)
           { t: 'n', f: `IFERROR(SUMIF(RET!$${retCols.nameCol}:$${retCols.nameCol}, $B${r}, RET!$${retCols.qtyCol}:$${retCols.qtyCol}), 0)`, v: item.ret },
           { t: 'n', f: `IFERROR(SUMIF(H!$${hCols.nameCol}:$${hCols.nameCol}, $B${r}, H!$${hCols.qtyCol}:$${hCols.qtyCol}), 0)`, v: item.h },
           { t: 'n', f: `IFERROR(SUMIF(IN!$${inCols.nameCol}:$${inCols.nameCol}, $B${r}, IN!$${inCols.qtyCol}:$${inCols.qtyCol}), 0)`, v: item.in },
