@@ -49,7 +49,7 @@
 
       <div id="panelMulti" class="space-y-4">
         <p class="text-xs text-slate-500 mb-3">
-          <i class="fa-solid fa-circle-info text-teal-600 mr-1"></i> Unggah berkas Excel/CSV secara terpisah dari SIMRS. Pada sheet Retur/Hibah membaca kolom <b>"Jumlah Retur"</b>, dan pada Worksheet membaca kolom <b>"FISIK"</b> serta kolom <b>"REAL"</b>.
+          <i class="fa-solid fa-circle-info text-teal-600 mr-1"></i> Unggah berkas Excel/CSV secara terpisah dari SIMRS. Aplikasi otomatis mendeteksi kolom nama dan kuantitas, serta menyusun rumus SUMIF yang sesuai pada file unduhan.
         </p>
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5">
@@ -174,11 +174,11 @@
         <p id="statMatch" class="text-2xl font-bold text-emerald-600 mt-1">0</p>
       </div>
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-        <p class="text-xs font-medium text-slate-500">Selisih Fisik (Sisa - Fisik ≠ 0)</p>
+        <p class="text-xs font-medium text-slate-500">Selisih Fisik (Sisa ≠ Fisik)</p>
         <p id="statDiffFisik" class="text-2xl font-bold text-amber-600 mt-1">0</p>
       </div>
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-        <p class="text-xs font-medium text-slate-500">Selisih Real (Real - Sisa ≠ 0)</p>
+        <p class="text-xs font-medium text-slate-500">Selisih Real (Real ≠ Sisa)</p>
         <p id="statDiffReal" class="text-2xl font-bold text-rose-600 mt-1">0</p>
       </div>
     </div>
@@ -219,7 +219,7 @@
               <th class="py-2.5 px-3 font-semibold text-right bg-slate-200/70">Fisik (Worksheet)</th>
               <th class="py-2.5 px-3 font-semibold text-right">Selisih Fisik</th>
               <th class="py-2.5 px-3 font-semibold text-right bg-purple-50 text-purple-900 font-bold">Real</th>
-              <th class="py-2.5 px-3 font-semibold text-right bg-purple-100 text-purple-900 font-bold">Selisih Real (Real - Sisa)</th>
+              <th class="py-2.5 px-3 font-semibold text-right bg-purple-100 text-purple-900 font-bold">Selisih Real</th>
             </tr>
           </thead>
           <tbody id="tableBody" class="divide-y divide-slate-100 text-slate-700">
@@ -384,7 +384,7 @@
       }
 
       if (nameCol === -1) nameCol = 1;
-      if (qtyCol === -1) qtyCol = 4;
+      if (qtyCol === -1) qtyCol = 2;
 
       for (let i = startRow; i < rows.length; i++) {
         const row = rows[i];
@@ -397,7 +397,6 @@
       }
     }
 
-    // MEMBACA WORKSHEET: MEMBACA KOLOM "FISIK" DAN KOLOM "REAL"
     function accumulateWorksheet(wb, fisikMap, realMap) {
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
@@ -415,12 +414,10 @@
             nameCol = j;
             startRow = i + 1;
           }
-          // Kolom FISIK (bukan selisih)
           if (fisikCol === -1 && (v === 'fisik' || v.includes('fisik')) && !v.includes('selisih')) {
             fisikCol = j;
             startRow = i + 1;
           }
-          // Kolom REAL
           if (realCol === -1 && (v === 'real' || v.includes('real')) && !v.includes('selisih')) {
             realCol = j;
             startRow = i + 1;
@@ -429,7 +426,6 @@
         if (nameCol !== -1 && fisikCol !== -1 && realCol !== -1) break;
       }
 
-      // Default fallback jika tidak ditemukan di header
       if (nameCol === -1) nameCol = 3;   // Kolom D
       if (fisikCol === -1) fisikCol = 9;  // Kolom J (FISIK)
       if (realCol === -1) realCol = 12;   // Kolom M (REAL)
@@ -440,13 +436,11 @@
         const n = cleanName(row[nameCol]);
         if (!n) continue;
 
-        // Ambil nilai FISIK
         const qFisik = parseFloat(row[fisikCol]);
         if (!isNaN(qFisik)) {
           fisikMap[n] = (fisikMap[n] || 0) + qFisik;
         }
 
-        // Ambil nilai REAL
         const qReal = parseFloat(row[realCol]);
         if (!isNaN(qReal)) {
           realMap[n] = (realMap[n] || 0) + qReal;
@@ -467,7 +461,7 @@
           const sUpper = sheetName.toUpperCase();
           const singleSheetWb = { SheetNames: [sheetName], Sheets: { [sheetName]: wb.Sheets[sheetName] } };
           
-          if (sUpper.includes('SO') && !sUpper.includes('OKTOBER') && !sUpper.includes('LPLPO')) rawFiles.master = singleSheetWb;
+          if (sUpper.includes('SO') && !sUpper.includes('LPLPO')) rawFiles.master = singleSheetWb;
           else if (sUpper.includes('MASTER') || sUpper.includes('STOK')) rawFiles.master = singleSheetWb;
           else if (sUpper === 'IN') rawFiles.in = singleSheetWb;
           else if (sUpper === 'O' || sUpper === 'OUT') rawFiles.out = singleSheetWb;
@@ -476,12 +470,6 @@
           else if (sUpper === 'SALE') rawFiles.sale = singleSheetWb;
           else if (sUpper.includes('WORKSHEET')) rawFiles.ws = singleSheetWb;
         });
-
-        // Fallback untuk master jika belum terdeteksi
-        if (!rawFiles.master) {
-          const soSheet = wb.SheetNames.find(s => s.toUpperCase().includes('SO'));
-          if (soSheet) rawFiles.master = { SheetNames: [soSheet], Sheets: { [soSheet]: wb.Sheets[soSheet] } };
-        }
 
         executeMultiProcess();
       };
@@ -507,11 +495,8 @@
         const worksheet = parsedData.wsFisikMap[key] || 0;
         const real = parsedData.wsRealMap[key] !== undefined ? parsedData.wsRealMap[key] : 0;
 
-        // Rumus: Sisa = Awal + Ret + H + In - Out - Sale
         const sisa = awal + ret + h + masuk - out - sale;
-        // Selisih Fisik = Sisa - Fisik
         const selisihFisik = sisa - worksheet;
-        // Selisih Real = Real - Sisa
         const selisihReal = real - sisa;
 
         if (selisihFisik === 0) totalCocok++;
@@ -598,6 +583,80 @@
       renderTable(filtered);
     }
 
+    // KONVERSI INDEKS KE HURUF KOLOM EXCEL
+    function colIndexToLetter(idx) {
+      let temp, letter = '';
+      let col = idx + 1;
+      while (col > 0) {
+        temp = (col - 1) % 26;
+        letter = String.fromCharCode(65 + temp) + letter;
+        col = Math.floor((col - temp) / 26);
+      }
+      return letter;
+    }
+
+    // DETEKSI HURUF KOLOM SUMBER TRANSAKSI SECARA DINAMIS
+    function detectSourceColLetters(wb, nameKeys, qtyKeys, defaultNameCol, defaultQtyCol) {
+      if (!wb || !wb.SheetNames || wb.SheetNames.length === 0) {
+        return { nameCol: colIndexToLetter(defaultNameCol), qtyCol: colIndexToLetter(defaultQtyCol) };
+      }
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+      let nIdx = -1, qIdx = -1;
+
+      for (let i = 0; i < Math.min(rows.length, 10); i++) {
+        const row = rows[i] || [];
+        for (let j = 0; j < row.length; j++) {
+          const val = String(row[j] || '').trim().toLowerCase();
+          if (nIdx === -1 && nameKeys.some(k => val === k || val.includes(k))) {
+            nIdx = j;
+          }
+          if (qIdx === -1 && qtyKeys.some(k => val === k || (k.length > 3 && val.includes(k)))) {
+            qIdx = j;
+          }
+        }
+        if (nIdx !== -1 && qIdx !== -1) break;
+      }
+
+      return {
+        nameCol: colIndexToLetter(nIdx !== -1 ? nIdx : defaultNameCol),
+        qtyCol: colIndexToLetter(qIdx !== -1 ? qIdx : defaultQtyCol)
+      };
+    }
+
+    // DETEKSI HURUF KOLOM DARI WORKSHEET (FISIK & REAL)
+    function detectWorksheetColLetters(wb) {
+      if (!wb || !wb.SheetNames || wb.SheetNames.length === 0) {
+        return { nameCol: 'D', fisikCol: 'J', realCol: 'M' };
+      }
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+      let nIdx = -1, fIdx = -1, rIdx = -1;
+
+      for (let i = 0; i < Math.min(rows.length, 10); i++) {
+        const row = rows[i] || [];
+        for (let j = 0; j < row.length; j++) {
+          const val = String(row[j] || '').trim().toLowerCase();
+          if (nIdx === -1 && (val === 'nama barang' || val.includes('nama barang') || val === 'nama obat')) {
+            nIdx = j;
+          }
+          if (fIdx === -1 && (val === 'fisik' || val.includes('fisik') || val === 'akhir') && !val.includes('selisih')) {
+            fIdx = j;
+          }
+          if (rIdx === -1 && (val === 'real' || val.includes('real')) && !val.includes('selisih')) {
+            rIdx = j;
+          }
+        }
+      }
+
+      return {
+        nameCol: colIndexToLetter(nIdx !== -1 ? nIdx : 3),   // Kolom D
+        fisikCol: colIndexToLetter(fIdx !== -1 ? fIdx : 9),  // Kolom J
+        realCol: colIndexToLetter(rIdx !== -1 ? rIdx : 12)   // Kolom M
+      };
+    }
+
+    // EKSPOR EXCEL DENGAN RUMUS OTOMATIS & DINAMIS
     function exportToIdenticalExcel() {
       if (calculatedLPLPO.length === 0) {
         alert("Tidak ada data untuk diekspor!");
@@ -606,8 +665,18 @@
 
       const outWb = XLSX.utils.book_new();
 
-      // Sheet LPLPO RI dengan penambahan kolom REAL dan SELISIH REAL
-      const lplpoHeaders = ['Kode', 'Nama Barang', 'Depo RI (stok awal)', 'RETUR', 'HIBAH', 'IN', 'OUT', 'SALE', 'SISA', 'WORKSHEET (FISIK)', 'SELISIH FISIK', 'REAL', 'SELISIH REAL (REAL - SISA)'];
+      const retCols = detectSourceColLetters(rawFiles.ret, ['nama obat', 'nama barang'], ['jumlah retur', 'retur'], 1, 2);
+      const hCols = detectSourceColLetters(rawFiles.h, ['nama obat', 'nama barang'], ['jumlah retur', 'jumlah'], 1, 2);
+      const inCols = detectSourceColLetters(rawFiles.in, ['nama barang', 'nama obat', 'nama produk'], ['jumlah', 'qty'], 1, 2);
+      const outCols = detectSourceColLetters(rawFiles.out, ['nama barang', 'nama obat', 'nama produk'], ['jumlah', 'qty'], 1, 2);
+      const saleCols = detectSourceColLetters(rawFiles.sale, ['nama produk', 'nama obat', 'nama barang'], ['qty', 'jumlah'], 1, 2);
+      const wsCols = detectWorksheetColLetters(rawFiles.ws);
+
+      const lplpoHeaders = [
+        'Kode', 'Nama Barang', 'Depo RI', 
+        'RET', 'H', 'IN', 'OUT', 'SALE', 
+        'SISA', 'WORKSHEET', 'SELISIH', 'REAL', 'SELISIH REAL'
+      ];
       const lplpoRows = [lplpoHeaders];
 
       for (let i = 0; i < calculatedLPLPO.length; i++) {
@@ -618,19 +687,15 @@
           item.kode,
           item.nama,
           item.awal,
-          { t: 'n', f: `IFERROR(SUMIF(RET!$B:$B, B${r}, RET!$C:$C), 0)`, v: item.ret },
-          { t: 'n', f: `IFERROR(SUMIF(H!$B:$B, B${r}, H!$C:$C), 0)`, v: item.h },
-          { t: 'n', f: `IFERROR(SUMIF(IN!$B:$B, B${r}, IN!$C:$C), 0)`, v: item.in },
-          { t: 'n', f: `IFERROR(SUMIF(O!$B:$B, B${r}, O!$C:$C), 0)`, v: item.out },
-          { t: 'n', f: `IFERROR(SUMIF(SALE!$B:$B, B${r}, SALE!$C:$C), 0)`, v: item.sale },
+          { t: 'n', f: `IFERROR(SUMIF(RET!$${retCols.nameCol}:$${retCols.nameCol}, $B${r}, RET!$${retCols.qtyCol}:$${retCols.qtyCol}), 0)`, v: item.ret },
+          { t: 'n', f: `IFERROR(SUMIF(H!$${hCols.nameCol}:$${hCols.nameCol}, $B${r}, H!$${hCols.qtyCol}:$${hCols.qtyCol}), 0)`, v: item.h },
+          { t: 'n', f: `IFERROR(SUMIF(IN!$${inCols.nameCol}:$${inCols.nameCol}, $B${r}, IN!$${inCols.qtyCol}:$${inCols.qtyCol}), 0)`, v: item.in },
+          { t: 'n', f: `IFERROR(SUMIF(O!$${outCols.nameCol}:$${outCols.nameCol}, $B${r}, O!$${outCols.qtyCol}:$${outCols.qtyCol}), 0)`, v: item.out },
+          { t: 'n', f: `IFERROR(SUMIF(SALE!$${saleCols.nameCol}:$${saleCols.nameCol}, $B${r}, SALE!$${saleCols.qtyCol}:$${saleCols.qtyCol}), 0)`, v: item.sale },
           { t: 'n', f: `C${r}+D${r}+E${r}+F${r}-G${r}-H${r}`, v: item.sisa },
-          // Formula Worksheet mengacu ke kolom FISIK (kolom J di worksheet)
-          { t: 'n', f: `SUMIF(worksheet!$D:$D, 'LPLPO RI'!B${r}, worksheet!$J:$J)`, v: item.worksheet },
-          // Formula Selisih Fisik: Sisa - Worksheet
+          { t: 'n', f: `IFERROR(SUMIF(worksheet!$${wsCols.nameCol}:$${wsCols.nameCol}, $B${r}, worksheet!$${wsCols.fisikCol}:$${wsCols.fisikCol}), 0)`, v: item.worksheet },
           { t: 'n', f: `I${r}-J${r}`, v: item.selisihFisik },
-          // Formula REAL mengacu ke kolom REAL (kolom M di worksheet)
-          { t: 'n', f: `SUMIF(worksheet!$D:$D, 'LPLPO RI'!B${r}, worksheet!$M:$M)`, v: item.real },
-          // Formula Selisih Real: REAL - SISA (L - I)
+          { t: 'n', f: `IFERROR(SUMIF(worksheet!$${wsCols.nameCol}:$${wsCols.nameCol}, $B${r}, worksheet!$${wsCols.realCol}:$${wsCols.realCol}), 0)`, v: item.real },
           { t: 'n', f: `L${r}-I${r}`, v: item.selisihReal }
         ]);
       }
@@ -646,7 +711,7 @@
       appendSheetOrEmpty(outWb, rawFiles.out, 'O');
       appendSheetOrEmpty(outWb, rawFiles.sale, 'SALE');
 
-      XLSX.writeFile(outWb, "LPLPO_RI_REKONSILIASI_OKTOBER.xlsx");
+      XLSX.writeFile(outWb, "LPLPO_Depo_Rawat_Inap_GENERATED.xlsx");
     }
 
     function appendSheetOrEmpty(targetWb, sourceWb, sheetTitle) {
